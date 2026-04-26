@@ -10,7 +10,7 @@ setup(
     long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     author='Xuefen Liu',
-    url='https://github.com/YOUR_USERNAME/caries-detr',
+    url='https://github.com/XuefenLiu-SZU/caries-detr',
     packages=find_packages(),
     python_requires='>=3.8',
     install_requires=[

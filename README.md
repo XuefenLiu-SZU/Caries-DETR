@@ -8,53 +8,6 @@ As dental caries appear as subtle, low-contrast lesions in intraoral imaging, ex
 
 ---
 
-## Architecture Overview
-
-```
-Intraoral Image
-       |
-       v
- ResNet-50 Backbone
-       |
-       v
- ChannelMapper Neck (4-scale FPN)
-       |
-       +-------------------------------+
-       v                               v
- Deformable DINO Encoder    Structure Perception Branch (SPB)
-       |                      (lightweight CNN heatmap from
-       |                       large-scale pre-training)
-       v                               v
- DINO Two-Stage Proposals    TSQIQueryGenerator
-       |                      (top-k structure-guided
-       |                       query initialization)
-       +---------------+---------------+
-                       v
-               DINO Decoder (6 layers)
-                       |
-                       v
-                CariesDETRHead
-                 +-- Classification head
-                 +-- Regression head
-                 +-- Lesion-aware Dynamic Loss Refiner (LDLR)
-                      +-- w_cls  = 1 + alpha * (1 - cls_prob)
-                      +-- w_bbox = 1 + beta  * (1 - GIoU_quality)
-                      +-- w_iou  = 1 + gamma * (1 - IoU)
-```
-
-### Key Components
-
-| Module | File | Description |
-|---|---|---|
-| `StructurePerceptionBranch` | `caries_detr/models/tsqi_module.py` | Lightweight CNN producing a structural prior heatmap from large-scale pre-trained features, highlighting anatomically significant regions such as tooth boundaries and lesion margins |
-| `TSQIQueryGenerator` | `caries_detr/models/tsqi_module.py` | Selects the top-k spatially salient positions guided by the SPB heatmap and projects them into DINO-compatible content queries and positional encodings |
-| `LesionDynamicLossRefiner` | `caries_detr/models/ldlr_module.py` | Computes three independent per-prediction quality-aware weights (IoU, classification, bbox quality) for adaptive loss reweighting, implementing quality-driven hard mining for subtle lesions |
-| `CariesDETRHead` | `caries_detr/models/caries_detr_head.py` | Integrates TSQI and LDLR into the DINO detection head (MMDetection-compatible registered module) |
-| `GradientStructureGenerator` | `tools/train_lipp.py` | Scharr-gradient-based pseudo GT generator for self-supervised SPB pre-training (LIPP) |
-| `AlphaDentDataset` | `caries_detr/datasets/alphadent_dataset.py` | COCO-format dataset loader for the 9-class AlphaDent intraoral photograph dataset (converted from YOLO instance segmentation format) |
-| `DentalAIDataset` | `caries_detr/datasets/dentalai_dataset.py` | COCO-format dataset loader for the 4-class DentalAI intraoral photograph dataset (2,495 images, 28,904 annotated objects) |
-
----
 
 ## Installation
 
